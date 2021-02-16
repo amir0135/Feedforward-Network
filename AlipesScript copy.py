@@ -10,7 +10,7 @@ import numpy as np
 from torch import nn
 import torch.utils.model_zoo as model_zoo
 import torch.onnx
-from torch import optim
+from torch import optim 
 
 def readcsv(file):
     data = pd.read_csv(file, header=None)
