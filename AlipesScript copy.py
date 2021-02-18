@@ -102,22 +102,20 @@ if __name__ == "__main__":
 
     print(y, 'y', y1, 'y1')
 
-  
-##define cross-entropy loss
-criterion = nn.CrossEntropyLoss()
-optimizer = optim.SGD(model.parameters(), lr=0.001, momentum=0.9)
-target = readcsv('y_test.csv')
 
-#strain model by looping over our data iterator, and feed the inputs to the modelwork and optimize.
-for epoch in range(10):  # loop over the dataset multiple times
-    # zero the parameter gradients
-    optimizer.zero_grad()
-    # forward + backward + optimize
-    outputs = model(x)
-    #outputs = outputs.reshape(1, 1000)
-    loss = criterion([outputs[0]], [target[0]])
-    loss.backward()
-    optimizer.step()
+    criterion = nn.MSELoss()
+    optimizer = optim.SGD(model.parameters(), lr=0.001, momentum=0.9)
+    target = readcsv('y_test.csv')
+    #target = torch.tensor(target, dtype=torch.long)
+
+    #strain model by looping over our data iterator, and feed the inputs to the modelwork and optimize.
+    for epoch in range(100):  # loop over the dataset multiple times
+        optimizer.zero_grad()
+        outputs = model(x)
+        loss = criterion(outputs[:,None], target)
+        loss.backward()
+        optimizer.step()
+        print(loss)
 
 # print('Finished Training')
     
@@ -140,15 +138,15 @@ for epoch in range(10):  # loop over the dataset multiple times
 
     # print('Model output', y)
 
-    print('-'*100)
-    #print('Model parameters:', list(model_int8.named_parameters()))
-    for name, param in model_int8.named_parameters():
-        print(param)
-        if param.requires_grad:
-            print('Name:', name)
-            npdata = param.data.numpy() # convert to ndarray
-            print('type', npdata.dtype)
-            print('Size:', npdata.shape)
-            #print('Data:', npdata)
-            print('\n')
-    print('-'*100)
+    # print('-'*100)
+    # #print('Model parameters:', list(model_int8.named_parameters()))
+    # for name, param in model_int8.named_parameters():
+    #     print(param)
+    #     if param.requires_grad:
+    #         print('Name:', name)
+    #         npdata = param.data.numpy() # convert to ndarray
+    #         print('type', npdata.dtype)
+    #         print('Size:', npdata.shape)
+    #         #print('Data:', npdata)
+    #         print('\n')
+    # print('-'*100)
