@@ -1,27 +1,6 @@
 # Feedforward Network
 
-This project implements a feedforward neural network using PyTorch.
-
-## Project Structure
-
-```
-/feedforward_network
-    /models
-        __init__.py
-        feedforward_ensemble.py
-    /utils
-        __init__.py
-        data_utils.py
-    /scripts
-        train.py
-        generate_data.py
-    /data
-        W0.csv
-        prelu_z_slopes.csv
-        ...
-README.md
-requirements.txt
-```
+This project is part of the implements a feedforward neural network using PyTorch to com
 
 ## Setup
 

@@ -1,5 +1,9 @@
+import sys
+import os
+sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
+
 import torch
-from utils.data_utils import save_tensor_to_csv
+from ..utils.data_utils import save_tensor_to_csv
 
 def generate_data():
     input_size = 256
@@ -9,7 +13,7 @@ def generate_data():
 
     W0 = torch.rand(num_networks, hidden_size, input_size) - 0.5
     save_tensor_to_csv(W0.flatten(), 'data/W0.csv')
-
+    
     prelu_z_slopes = torch.rand(num_networks) * 0.1
     save_tensor_to_csv(prelu_z_slopes, 'data/prelu_z_slopes.csv')
 
