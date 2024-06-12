@@ -18,7 +18,7 @@ class FeedforwardEnsembleNetwork(nn.Module):
         self.prelu_r_slopes = nn.Parameter(read_csv_to_tensor('data/prelu_r_slopes.csv'))
         self.Wz = nn.Parameter(read_csv_to_tensor('data/Wz.csv').reshape(num_networks, hidden_size))
         self.Wr = nn.Parameter(read_csv_to_tensor('data/Wr.csv').reshape(num_networks, hidden_size))
-        self.z_scale = nn.Parameter(read_csv_to_tensor('data/z_scale.csv'))
+        self.z_scale = nn.Parameter(read_csv_to_tensor('data/z_scale.csv').reshape(num_networks))
 
     def forward(self, x):
         batchsize = x.shape[0]
