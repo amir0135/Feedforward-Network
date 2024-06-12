@@ -1,6 +1,16 @@
+import os
+import sys
+
+# Get the absolute path of the directory that contains the current script
+current_dir = os.path.dirname(os.path.abspath(__file__))
+
+# Add the parent directory of the current directory to sys.path
+parent_dir = os.path.dirname(current_dir)
+sys.path.insert(0, parent_dir)
+
 import torch
 from torch import optim, nn
-from models.feedforward_ensemble import FeedforwardEnsembleNetwork
+from feedforward_network.feedforward_ensemble import FeedforwardEnsembleNetwork
 from utils.data_utils import read_csv_to_tensor
 
 def train():
