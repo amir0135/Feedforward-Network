@@ -1,70 +1,94 @@
-# Feedforward Network
+# Feedforward Ensemble Network
 
-This project is part of the implements a feedforward neural network using PyTorch to com
+A PyTorch implementation of a **feedforward ensemble network** with PReLU activations and a bounded sigmoid output head. It is the reference software model for [`ML_SME_FPGA`](https://github.com/amir0135/ML_SME_FPGA-main), where the same architecture is reimplemented in hardware via Synchronous Message Exchange (SME).
 
-## Setup
+Having both implementations lets the FPGA design be validated numerically against a known-good PyTorch baseline.
 
-1. **Clone the repository:**
-    ```bash
-    git clone https://github.com/amir0135/Feedforward-Network.git
-    cd Feedforward-Network
-    ```
+## Architecture
 
-2. **Install the required dependencies:**
-    ```bash
-    pip install -r requirements.txt
-    ```
+The network runs `num_networks` parallel sub-networks over a shared input and averages their bounded predictions:
 
-3. **Generate data:**
-    ```bash
-    python scripts/generate_data.py
-    ```
+```
+x  (batch, 256)
+ │
+ ├─ W0            linear projection → (batch, 16, 96)
+ │
+ ├─ PReLU(z)  ──► hz ──► ·Wz ──► sum ──► z
+ ├─ PReLU(r)  ──► hr ──► ·Wr ──► sum ──► r
+ │
+ └─ y = r · (2·σ(z_scale · z) − 1)     bounded to ±max_predict
+     ŷ = mean(y over the 16 networks)
+```
 
-4. **Train the model:**
-    ```bash
-    python scripts/train.py
-    ```
+Two separate PReLU slopes are applied to the same hidden activations, producing a **gate** (`z`) and a **magnitude** (`r`). The sigmoid gate is rescaled to `[-1, 1]`, so each sub-network emits a signed, bounded prediction before averaging.
 
-## Requirements
+### Default hyperparameters
 
-- Python 3.7+
-- PyTorch
-- pandas
-- numpy
+| Parameter | Default | Meaning |
+|---|---|---|
+| `input_size` | 256 | Input feature dimension |
+| `hidden_size` | 96 | Hidden units per sub-network |
+| `num_networks` | 16 | Parallel sub-networks in the ensemble |
+| `max_predict` | 1 | Output clamp bound |
 
-## Description
+Weights (`W0`, `Wz`, `Wr`, `z_scale`, and the PReLU slopes) are loaded from CSV files in `data/` so the exact same values can be fed to the FPGA implementation.
 
-### Models
+## Repository layout
 
-- `feedforward_ensemble.py`: Contains the definition of the `FeedforwardEnsembleNetwork` class, which implements the feedforward neural network.
+```
+feedforward_network/
+  feedforward_ensemble.py   FeedforwardEnsembleNetwork module
+utils/
+  data_utils.py             CSV → torch.Tensor helpers
+scripts/
+  generate_data.py          Creates synthetic weights and training data in data/
+  train.py                  MSE training loop (SGD, momentum 0.9)
+```
 
-### Utils
+## Getting started
 
-- `data_utils.py`: Contains utility functions for reading data from CSV files and saving tensors to CSV files.
+Requires Python 3.9+.
 
-### Scripts
+```bash
+git clone https://github.com/amir0135/Feedforward-Network.git
+cd Feedforward-Network
 
-- `train.py`: Script to train the feedforward neural network model.
-- `generate_data.py`: Script to generate random data and save it to CSV files needed for training and testing.
+python -m venv .venv
+source .venv/bin/activate          # Windows: .venv\Scripts\activate
+pip install -r requirements.txt
+```
 
-### Data
+Generate the weight and data CSVs, then train:
 
-- The `data` directory will contain the generated CSV files used for training and testing the model.
+```bash
+python scripts/generate_data.py
+python scripts/train.py
+```
 
-## Running the Project
+> Both scripts resolve `data/` relative to the current working directory, so run them from the repository root.
 
-1. **Generate Data:**
+Training prints per-epoch MSE loss for 100 epochs:
 
-   Run the `generate_data.py` script to create the necessary CSV files in the `data` directory.
+```
+Epoch 1, Loss: 0.4127...
+Epoch 2, Loss: 0.3894...
+```
 
-    ```bash
-    python scripts/generate_data.py
-    ```
+## Using the model directly
 
-2. **Train the Model:**
+```python
+import torch
+from feedforward_network.feedforward_ensemble import FeedforwardEnsembleNetwork
 
-   Run the `train.py` script to train the feedforward neural network model.
+model = FeedforwardEnsembleNetwork(input_size=256, hidden_size=96, num_networks=16)
+x = torch.randn(8, 256)
+y = model(x)          # (8,) — each value in [-1, 1]
+```
 
-    ```bash
-    python scripts/train.py
-    ```
+## Tech stack
+
+PyTorch · pandas · NumPy
+
+## License
+
+MIT — see [LICENSE](LICENSE).
